@@ -7,7 +7,7 @@ from model import Movie
 
 from model import connect_to_db, db
 from server import app
-from datetime import datetime
+import datetime
 
 
 def load_users():
@@ -32,18 +32,27 @@ def load_users():
         db.session.add(user)
 
     # Once we're done, we should commit our work
-    db.session.commit()
+    db.session.commit() 
 
 
 
 
 def load_movies():
     """Load movies from u.item into database."""
+
+    print("Movies")
+
+    Movie.query.delete()
+
+    # Read u.item file and insert data
+
     for row in open('seed_data/u.item'):
         row = row.rstrip()
-        movie_id, title, released_at, imdb_url = row.split('|')
+        split_row=row.split('|')
+        movie_id, title, released_at = split_row[:3]
+        imdb_url=split_row[4:5]
         if released_at:
-            released_at = datetime.datetime.strptime(released_at,"%d-%b-%Y")
+            released_at = datetime.datetime.strptime(released_at,"%d-%b-%Y").date()
         else:
             released_at = None
         movie = Movie(movie_id=movie_id, 
@@ -57,7 +66,18 @@ def load_movies():
 
 def load_ratings():
     """Load ratings from u.data into database."""
+    print("ratings")
+    Rating.query.delete()
 
+    for row in open('seed_data/u.data'):
+        row = row.rstrip()
+        split_row=row.split("\t")
+        user_id, movie_id, score = split_row[:3]
+        rating = Rating(user_id=user_id,
+                        movie_id=movie_id,
+                        score=score)
+        db.session.add(rating)
+    db.session.commit()
 
 def set_val_user_id():
     """Set value for the next user_id after seeding database"""
